@@ -10,6 +10,7 @@ from sklearn.metrics import accuracy_score
 # opencv 提取hog特征
 def get_hog_features(trainset):
     features = []
+
     hog = cv2.HOGDescriptor('./hog.xml')
 
     for img in trainset:
@@ -17,12 +18,13 @@ def get_hog_features(trainset):
         cv_img = img.astype(np.uint8)
 
         hog_feature = hog.compute(cv_img)
+        # hog_feature = np.transpose(hog_feature)
         features.append(hog_feature)
 
     features = np.array(features)
     features = np.reshape(features,(-1,324))
-    return features
 
+    return features
 def Train(trainset,train_labels):
     # get params
     trainset_size = len(train_labels)
@@ -39,24 +41,27 @@ def Train(trainset,train_labels):
         nochange_count += 1
         if nochange_count > nochange_upper_limit:
             break
-        # 随机选取数据
-        index = random.randint(0,trainset_size-1)
+
+        # 随机选的数据
+        index = random.randint(0, trainset_size - 1)
         img = trainset[index]
         label = train_labels[index]
 
-        #计算f(w*xi+b)
-        yi = int(label!=object_num) * 2-1
-        result = yi*(np.dot(img,w)+b)
+        # 计算yi(w*xi+b)
+        yi = int(label != object_num) * 2 - 1  # 如果等于object_num, yi= 1, 否则yi=1
+        result = yi * (np.dot(img, w) + b)
 
-        # 如果f(w*xi+b) < = 0 就更新w,b
-        # w += study_step*(yi*img)
-        w = np.add(w,study_step*(yi*img))
-        b += yi*study_step
+        # 如果yi(w*xi+b) <= 0 则更新 w 与 b 的值
+        if result <= 0:
+            img = np.reshape(trainset[index], (feature_length, 1))  # 为了维数统一，需重新设定一下维度
 
-        study_count += 1
-        if study_count > study_total:
-            break
-        nochange_count = 0
+            w += img * yi * study_step  # 按算法步骤3更新参数
+            b += yi * study_step
+
+            study_count += 1
+            if study_count > study_total:
+                break
+            nochange_count = 0
     return w,b
 def Predition(testset,w,b):
     predit = []
