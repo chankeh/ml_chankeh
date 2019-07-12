@@ -80,7 +80,7 @@ object_num = 0                                      # 分类的数字
 if __name__ == '__main__':
     print('start read data')
     time1 = time.time()
-    raw_data = pd.read_csv('./train.csv',header=0)
+    raw_data = pd.read_csv('./train_binary.txt',header=0)
 
     data = raw_data.values
     imgs = data[0::,1::]
